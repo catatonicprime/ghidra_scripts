@@ -87,6 +87,7 @@ callers.sort()
 
 renames = []
 for caller in callers:
+  print("Recovering args for {}".format(caller))
   args = getArgumentsForCall(caller, {'RSI': 'function', 'RDI': 'file'})
   if args is None:
     continue
@@ -99,7 +100,6 @@ for rename in renames:
   filename = rename[0]['file'] if rename[0] else None
   new_name = mangle_name(filename or "_", functionname or "_func_{}".format(rename[1]))
   print("{} -> {}".format(rename, new_name))
-  symbol = getFunctionAt(rename[2])
-  print(symbol)
-  #symbol.setName(new_name, SourceType.USER_DEFINED)
+  symbol = getFunctionAt(rename[1])
+  symbol.setName(new_name, SourceType.USER_DEFINED)
   
