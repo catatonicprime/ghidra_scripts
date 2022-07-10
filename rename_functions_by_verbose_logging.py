@@ -73,22 +73,22 @@ logv_entry = logv.getEntryPoint()
 
 # From the starting spot, find the calling locations.
 
-callers = [caller for caller in getReferencesTo(logv_entry) 
+calls = [caller for caller in getReferencesTo(logv_entry) 
            if caller.getReferenceType() == FlowType.UNCONDITIONAL_CALL
              and getFunctionContaining(caller.fromAddress)]
 
-orphan_callers = [caller for caller in getReferencesTo(logv_entry) 
+orphan_calls = [caller for caller in getReferencesTo(logv_entry) 
            if caller.getReferenceType() == FlowType.UNCONDITIONAL_CALL
              and getFunctionContaining(caller.fromAddress) is None]
 
-orphan_callers.sort()
-callers.sort()
+orphan_calls.sort()
+calls.sort()
 
 
 renames = []
-for caller in callers:
-  print("Recovering args for {}".format(caller))
-  args = getArgumentsForCall(caller, {'RSI': 'function', 'RDI': 'file'})
+for call in calls:
+  print("Recovering args for {}".format(call))
+  args = getArgumentsForCall(call, {'RSI': 'function', 'RDI': 'file'})
   if args is None:
     continue
   renames.append(args)
