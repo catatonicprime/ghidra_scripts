@@ -84,28 +84,10 @@ orphan_calls = [caller for caller in getReferencesTo(logv_entry)
 orphan_calls.sort()
 calls.sort()
 
-
-renames = []
 for call in calls:
-  print("Recovering args for {}".format(call))
-  args = getArgumentsForCall(call, {'RSI': 'file', 'RDI':'assertion'})
+  args = getArgumentsForCall(call, {'RDI': 'arg'})
   if args is None:
     continue
-  renames.append(args)
-
-print ("Found {} total functions to rename.".format(len(renames)))
-
-filename = None
-functionname = None
-for rename in renames:
-  functionname = str(rename[0]['assertion']) if rename[0] else None
-  filename = str(rename[0]['file']) if rename[0] else None
-  if filename is '':
+  if args[0]['arg'] is None or args[0]['arg'] is '':
     continue
-  
-  new_name = mangle_name(filename or "_", functionname or "_func_{}".format(rename[1]))
-  symbol = getSymbolAt(rename[1])
-  if symbol.getSource() == SourceType.DEFAULT:
-    print("{} -> {}".format(rename, new_name))
-    # symbol.setName(new_name, SourceType.USER_DEFINED)
-  
+  print("call at: {} with arg: '{}'".format(call.fromAddress, args[0]['arg']))

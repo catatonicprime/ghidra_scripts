@@ -26,6 +26,15 @@ from ghidra.program.model.symbol import SourceType
 # at varying levels of depth.
 
 def getArgumentsForCall(call, register_name_map={}):
+  '''
+  Attempts to recover the scalar string loaded into the requested registers in the register_name_map.
+
+  inputs:
+    register_name_map: a dictionary of values in the form of {'register name': 'arbitrary returned name'}
+  
+  outputs:
+    returns a tuple including a name value map which is the {'arbtrary returned name':'the scalar string'}
+  '''
   # call: location to attempt to discover arguments for.
   # register_name_map: map of registers to a more semantic name, e.g. {"RSI": "function", "RDI": "file"}
   # RSI -> function name
