@@ -3,6 +3,8 @@
 import ghidra.app.decompiler as decomp
 from ghidra.program.model.symbol import FlowType
 from ghidra.program.model.symbol import SourceType
+from ghidra.program.model.lang import Register
+import re
 
 def mangle_name(filename, funcname):
   return "{}/{}".format(filename.lstrip("../"), funcname)
@@ -55,9 +57,15 @@ def getArgumentsForCall(call, register_name_map={}):
     input_objs = instr.getInputObjects()[0]
     if input_objs is None:
       return None
+    if isinstance(input_objs, Register):
+      return None
+
     data_addr = toAddr(input_objs.getValue())
+    data_container = getDataContaining(data_addr)
     data = getDataAt(data_addr)
     resolved_data = "" if data is None else data.getValue()
+    if not data and data_container:
+      resolved_data = data_container.getValue()[data_addr.subtract(data_container.getAddress()):]
 
     name_value_map[value_name] = resolved_data
 
@@ -88,7 +96,7 @@ calls.sort()
 renames = []
 for call in calls:
   print("Recovering args for {}".format(call))
-  args = getArgumentsForCall(call, {'RSI': 'file', 'RDI':'assertion'})
+  args = getArgumentsForCall(call, {'R8': 'format', 'R9':'function'})
   if args is None:
     continue
   renames.append(args)
@@ -98,14 +106,19 @@ print ("Found {} total functions to rename.".format(len(renames)))
 filename = None
 functionname = None
 for rename in renames:
-  functionname = str(rename[0]['assertion']) if rename[0] else None
-  filename = str(rename[0]['file']) if rename[0] else None
-  if filename is '':
+  functionname = str(rename[0]['function']) if rename[0] else None
+  filename = rename[0]['format']
+  if ".c:" in filename:
+    filename = filename[:filename.index('.c:')+2]
+  if not re.match("^[a-z0-9_]+$", functionname):
     continue
+  
+  # if filename is '':
+  #   continue
   
   new_name = mangle_name(filename or "_", functionname or "_func_{}".format(rename[1]))
   symbol = getSymbolAt(rename[1])
-  if symbol.getSource() == SourceType.DEFAULT:
-    print("{} -> {}".format(rename, new_name))
-    # symbol.setName(new_name, SourceType.USER_DEFINED)
+  # if symbol.getSource() == SourceType.DEFAULT:
+  print("{} -> {}".format(rename, new_name))
+  # symbol.setName(new_name, SourceType.USER_DEFINED)
   
