@@ -29,6 +29,38 @@ def resolveData(address, resolveType='address'):
     return resolved_data
   return None
 
+def traceRegisters(call, target_registers):
+  # We start at the called from address and then work toward previous instructions.
+  address = call.fromAddress
+  instr = getInstructionAt(address).getPrevious()
+  containing_function = getFunctionContaining(address).getEntryPoint()
+
+  while(address >= containing_function):
+    # print("--- ResultObjects")
+    result_objects = instr.getResultObjects()
+    if len(result_objects) < 1:
+      print("*** Unexpected...  ResultObjects was empty")
+      continue
+    # print(result_objects[0])
+
+    if any(str(item) in target_registers for item in result_objects):
+      input_objs = instr.getInputObjects()[0]
+      if input_objs is None:
+        print("*** Unexpected...  getInputObjects was empty")
+        break
+      print("--- Source Data: {}".format(resolveData(input_objs.getValue())))
+      break
+    
+    instr = instr.getPrevious()
+    if not instr:
+      break
+    # non-Fallthroughs can look like inter-procedural calls, i.e. a call to another functiont that might affect
+    # a register... but tracking into them sounds like a huge pain in the ass & probably not necesary in 
+    # simpler use-cases that can still be very useful!
+    # Luckily a non-fall through appear to be instructions *after* a call
+    if not instr.isFallthrough():
+      break
+    # print("--- Previous instruction")
 
 
 data_stack = []
@@ -54,39 +86,7 @@ lua_pushcclosure_calls_with_containing_function = lua_pushcclosure_calls_with_co
 
 print("--- Calls")
 for call in lua_pushcclosure_calls_with_containing_function:
-  print(call)
+  traceRegisters(call, ['RSI', 'ESI'])
 
-target_registers = ['RSI', 'ESI']
 
-# We start at the called from address and then work toward previous instructions.
-address = call.fromAddress
-instr = getInstructionAt(address).getPrevious()
-containing_function = getFunctionContaining(address).getEntryPoint()
-
-while(address >= containing_function):
-  # print("--- ResultObjects")
-  result_objects = instr.getResultObjects()
-  if len(result_objects) < 1:
-    print("*** Unexpected...  ResultObjects was empty")
-    continue
-  # print(result_objects[0])
-
-  if any(str(item) in target_registers for item in result_objects):
-    input_objs = instr.getInputObjects()[0]
-    if input_objs is None:
-      print("*** Unexpected...  getInputObjects was empty")
-      break
-    print("--- Source Data: {}".format(resolveData(input_objs.getValue())))
-    break
-  
-  instr = instr.getPrevious()
-  if not instr:
-    break
-  # non-Fallthroughs can look like inter-procedural calls, i.e. a call to another functiont that might affect
-  # a register... but tracking into them sounds like a huge pain in the ass & probably not necesary in 
-  # simpler use-cases that can still be very useful!
-  # Luckily a non-fall through appear to be instructions *after* a call
-  if not instr.isFallthrough():
-    break
-  # print("--- Previous instruction")
 
