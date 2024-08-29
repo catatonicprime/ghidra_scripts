@@ -76,7 +76,7 @@ lua_pushcclosure_calls_with_containing_function = [caller for caller in lua_push
 lua_pushcclosure_calls_with_containing_function.sort()
 
 # simplify to just one call to play with... remove to explode your cpu
-lua_pushcclosure_calls_with_containing_function = lua_pushcclosure_calls_with_containing_function[:1]
+# lua_pushcclosure_calls_with_containing_function = lua_pushcclosure_calls_with_containing_function[:1]
 
 # Now we have all the calls we want to investigate.
 # These represent the last instruction in a series of instructions which should terminate:
@@ -86,6 +86,7 @@ lua_pushcclosure_calls_with_containing_function = lua_pushcclosure_calls_with_co
 
 print("--- Calls")
 for call in lua_pushcclosure_calls_with_containing_function:
+  print(call)
   traceRegisters(call, ['RSI', 'ESI'])
 
 
