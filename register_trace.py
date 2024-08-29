@@ -19,6 +19,11 @@
 
 from ghidra.program.model.symbol import FlowType
 
+# ResolveData
+# This should return the value of the whatever the important thing
+# in the register is. If the register is a pointer, this returns
+# the pointer. If the register is a string point, this returns the
+# string. So forth and so on...
 def resolveData(address, resolveType='address'):
   data_addr = toAddr(address)
   if resolveType == 'address':
@@ -48,6 +53,9 @@ def traceRegisters(call, target_registers):
       if input_objs is None:
         print("*** Unexpected...  getInputObjects was empty")
         break
+      if isinstance(input_objs, ghidra.program.model.lang.Register):    
+        return None
+      print(instr.getAddress())
       print("--- Source Data: {}".format(resolveData(input_objs.getValue())))
       break
     
